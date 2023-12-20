@@ -1,9 +1,11 @@
 import { Construct } from 'constructs';
+import { EksCluster as Cluster } from 'eks-cluster';
 import { aws_eks as eks } from 'aws-cdk-lib';
 import { aws_ssm as ssm } from 'aws-cdk-lib';
 
 export interface EksServiceStackProps {
   appName: string;
+  cluster: Cluster;
   services: any
 }
 
@@ -13,14 +15,15 @@ export class EksService extends Construct {
 
     const appName = props.appName;
     const services = props.services;
+    const eksCluster = props.cluster;
 
     const kubectlRoleArn = ssm.StringParameter.fromStringParameterAttributes(this, 'kubectlrolearn', {
       parameterName: `/eks/${appName}/KubectlRoleArn`
-    }).stringValue;
+    });
 
     const cluster = eks.FargateCluster.fromClusterAttributes(this, 'eks-cluster', {
       clusterName: `${appName}`,
-      kubectlRoleArn: kubectlRoleArn
+      kubectlRoleArn: kubectlRoleArn.stringValue
     })
 
     const manifests = [];
